@@ -1,0 +1,5 @@
+name,accuracy,f1,auc
+Logistic Regression,1.0,1.0,1.0
+Random Forest,1.0,1.0,1.0
+Gradient Boosting,0.96,0.9411764705882353,0.9846153846153847
+XGBoost,0.98,0.9705882352941176,1.0
