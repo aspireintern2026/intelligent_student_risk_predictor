@@ -5,7 +5,6 @@ __pycache__/
 *.pyd
 
 # SQLite database
-data/student_data.db
 
 # Virtual environment
 venv/
