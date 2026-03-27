@@ -9,6 +9,13 @@ from sklearn.preprocessing import MinMaxScaler
 import os
 import pickle
 
+try:
+    from src.sqlite_db import init_db, save_students
+except ImportError:
+    import sqlite_db as _sqlite
+    init_db = _sqlite.init_db
+    save_students = _sqlite.save_students
+
 RANDOM_STATE = 42
 np.random.seed(RANDOM_STATE)
 
@@ -89,6 +96,11 @@ def preprocess(df: pd.DataFrame):
     os.makedirs("models", exist_ok=True)
     with open("models/scaler.pkl", "wb") as f:
         pickle.dump({"scaler": scaler, "feature_cols": feature_cols}, f)
+
+    try:
+        save_students(df)
+    except Exception:
+        pass
 
     return X_scaled, y, feature_cols, scaler
 

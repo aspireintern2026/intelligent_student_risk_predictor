@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# SQLite database
+data/student_data.db
+
+# Virtual environment
+venv/
+ENV/
+.env
+
+# Editor files
+*.swp
+*.swo
+.DS_Store

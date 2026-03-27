@@ -15,6 +15,8 @@ import pandas as pd
 import numpy as np
 import pickle
 
+from src.sqlite_db import init_db, get_stats as db_stats, get_sample_students, get_recent_predictions, save_prediction
+
 # ── Bootstrap: train model if not yet trained ─────────────────────────────────
 def bootstrap():
     model_path  = os.path.join(os.path.dirname(__file__), "..", "models", "student_risk_model.pkl")
@@ -39,6 +41,7 @@ def bootstrap():
         print("Training complete.")
 
 bootstrap()
+init_db()
 
 # ── Change working dir so relative paths in predict.py work ──────────────────
 os.chdir(os.path.join(os.path.dirname(__file__), ".."))
@@ -101,6 +104,7 @@ def predict_single(student: StudentInput):
     try:
         data   = student.dict(exclude={"student_id"})
         result = predict_risk(data)
+        save_prediction(student.student_id or "N/A", result)
         return PredictionResult(student_id=student.student_id or "N/A", **result)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -114,6 +118,7 @@ def predict_batch(batch: BatchInput):
         try:
             data   = s.dict(exclude={"student_id"})
             result = predict_risk(data)
+            save_prediction(s.student_id or "N/A", result)
             results.append(PredictionResult(student_id=s.student_id or "N/A", **result))
         except Exception as e:
             results.append(PredictionResult(
@@ -128,21 +133,23 @@ def predict_batch(batch: BatchInput):
 def stats():
     """Return dataset class distribution statistics."""
     try:
-        df = pd.read_csv("data/raw/student_data.csv")
-        return {
-            "total_students": len(df),
-            "high_risk":      int((df["risk_label"] == 1).sum()),
-            "low_risk":       int((df["risk_label"] == 0).sum()),
-            "avg_attendance": round(df["attendance"].mean(), 1),
-            "avg_assignment": round(df["assignment_score"].mean(), 1),
-        }
-    except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="Dataset not found. Run data_pipeline.py first.")
+        return db_stats()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/predictions")
+def predictions(limit: int = 20):
+    """Return the most recent logged predictions."""
+    return get_recent_predictions(limit=limit)
 
 
 @app.get("/sample-students")
 def sample_students():
     """Return 6 sample students for demo purposes."""
+    students = get_sample_students()
+    if students:
+        return students
     return [
         {"student_id": "S101", "attendance": 82, "assignment_score": 78, "midterm_score": 75,
          "study_hours": 4, "previous_grade": 74, "quiz_scores": 76, "participation": 72, "sleep_hours": 7},

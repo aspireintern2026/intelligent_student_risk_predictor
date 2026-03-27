@@ -6,6 +6,7 @@ Trains and evaluates multiple models, saves the best one.
 import pandas as pd
 import numpy as np
 import pickle, os
+import sqlite3
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
@@ -21,11 +22,33 @@ except ImportError:
     XGBOOST_AVAILABLE = False
     print("XGBoost not installed. Skipping XGBoost model.")
 
+try:
+    from src.sqlite_db import DB_PATH, init_db
+except ImportError:
+    import sqlite_db as _sqlite
+    DB_PATH = _sqlite.DB_PATH
+    init_db = _sqlite.init_db
+
+
 RANDOM_STATE = 42
 
 
 def load_data():
-    df = pd.read_csv("data/processed/student_processed.csv")
+    init_db()
+    query = (
+        "SELECT attendance, assignment_score, midterm_score, study_hours, previous_grade, "
+        "quiz_scores, participation, sleep_hours, performance_trend, attendance_rate, score_avg, "
+        "study_sleep_ratio, risk_label FROM students"
+    )
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        df = pd.read_sql_query(query, conn)
+        conn.close()
+        if df.empty:
+            raise ValueError("SQLite database has no student records")
+    except Exception:
+        df = pd.read_csv("data/processed/student_processed.csv")
+
     X = df.drop("risk_label", axis=1).values
     y = df["risk_label"].values
     return train_test_split(X, y, test_size=0.2, stratify=y, random_state=RANDOM_STATE)

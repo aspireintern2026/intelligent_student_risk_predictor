@@ -20,6 +20,7 @@ student_risk_predictor/
 ├── models/                      ← Saved ML model + scaler
 ├── reports/                     ← Model comparison CSV
 ├── requirements.txt
+├── data/student_data.db         ← SQLite database for student records and predictions
 └── setup_and_run.py             ← One-click setup script
 ```
 
@@ -59,9 +60,10 @@ python setup_and_run.py
 
 This will:
 1. Generate 500 synthetic student records
-2. Train Logistic Regression, Random Forest, and XGBoost
-3. Save the best model
-4. Start the FastAPI server at http://127.0.0.1:8000
+2. Persist student records into `data/student_data.db`
+3. Train Logistic Regression, Random Forest, and XGBoost
+4. Save the best model
+5. Start the FastAPI server at http://127.0.0.1:8000
 
 ### Step 7 — Open the dashboard
 Open `frontend/index.html` in your browser (double-click the file).
@@ -78,6 +80,7 @@ Open `frontend/index.html` in your browser (double-click the file).
 | POST | `/predict/batch` | Predict list of students |
 | GET | `/stats` | Dataset statistics |
 | GET | `/sample-students` | 6 sample students for demo |
+| GET | `/predictions` | Recent prediction logs |
 
 ## API Docs
 Visit http://127.0.0.1:8000/docs for interactive Swagger UI.
